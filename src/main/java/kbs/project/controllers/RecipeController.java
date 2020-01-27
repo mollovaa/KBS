@@ -1,7 +1,9 @@
-package kbs.project;
+package kbs.project.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import kbs.project.entities.Product;
+import kbs.project.services.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,5 +35,7 @@ public class RecipeController {
     return ResponseEntity.ok(recipeService.findRecipesByProducts(products1));
   }
 
+
+  //todo add swagger
 
 }

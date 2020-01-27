@@ -1,4 +1,4 @@
-package kbs.project;
+package kbs.project.services;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -10,6 +10,9 @@ import kbs.project.apidtos.IngredientApiDto;
 import kbs.project.apidtos.IngredientNutritionApiDto;
 import kbs.project.apidtos.RecipeByIdApiDto;
 import kbs.project.apidtos.RecipeByIngredientsApiDto;
+import kbs.project.entities.Product;
+import kbs.project.entities.Recipe;
+import kbs.project.services.ApiClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

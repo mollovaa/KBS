@@ -1,4 +1,4 @@
-package kbs.project;
+package kbs.project.entities;
 
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;

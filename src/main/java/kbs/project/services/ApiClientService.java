@@ -1,4 +1,4 @@
-package kbs.project;
+package kbs.project.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,4 +61,6 @@ public class ApiClientService {
 
     return result.getBody();
   }
+
+  //todo get ingredient by id
 }

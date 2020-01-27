@@ -1,4 +1,4 @@
-package kbs.project;
+package kbs.project.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import kbs.project.apidtos.IngredientByIdApiDto;
 import kbs.project.apidtos.RecipeByIdApiDto;
 import kbs.project.apidtos.RecipeByIngredientsApiDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,10 +27,13 @@ public class ApiClientService {
   private String apiKey;
 
   private String findByIngredientsURL = "https://api.spoonacular.com/recipes/findByIngredients?ingredients=%s"
-      + "&number=100&apiKey=%s&ranking=1";
+      + "&number=100&ranking=1&apiKey=%s";
 
-  private String findRecipeById = "https://api.spoonacular.com/recipes/%s/information"
+  private String findRecipeByIdURL = "https://api.spoonacular.com/recipes/%s/information"
       + "?includeNutrition=true&apiKey=%s";
+
+  private String findIngredientByIdURL = "https://api.spoonacular.com/food/ingredients/%s/"
+      + "information?amount=1&unit=g&apiKey=%s";
 
   private final RestTemplate restTemplate;
 
@@ -46,21 +50,34 @@ public class ApiClientService {
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.add("User-Agent", "PostmanRuntime/7.20.1");
 
-    ResponseEntity<RecipeByIngredientsApiDto[]> result = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity(httpHeaders), RecipeByIngredientsApiDto[].class);
+    ResponseEntity<RecipeByIngredientsApiDto[]> result = restTemplate.exchange(url, HttpMethod.GET,
+        new HttpEntity(httpHeaders), RecipeByIngredientsApiDto[].class);
 
     return new ArrayList<>(Arrays.asList(result.getBody()));
   }
 
   public RecipeByIdApiDto findRecipeById(Long id) {
-    String url = String.format(findRecipeById, id, apiKey);
+    String url = String.format(findRecipeByIdURL, id, apiKey);
 
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.add("User-Agent", "PostmanRuntime/7.20.1");
 
-    ResponseEntity<RecipeByIdApiDto> result = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity(httpHeaders), RecipeByIdApiDto.class);
+    ResponseEntity<RecipeByIdApiDto> result = restTemplate.exchange(url, HttpMethod.GET,
+        new HttpEntity(httpHeaders), RecipeByIdApiDto.class);
 
     return result.getBody();
   }
 
-  //todo get ingredient by id
+  public IngredientByIdApiDto getIngredientById(Long id) {
+    String url = String.format(findIngredientByIdURL, id, apiKey);
+
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.add("User-Agent", "PostmanRuntime/7.20.1");
+
+    ResponseEntity<IngredientByIdApiDto> result = restTemplate.exchange(url, HttpMethod.GET,
+        new HttpEntity(httpHeaders), IngredientByIdApiDto.class);
+
+    return result.getBody();
+  }
+
 }

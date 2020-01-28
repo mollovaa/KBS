@@ -5,6 +5,7 @@ import java.util.List;
 import kbs.project.entities.Product;
 import kbs.project.services.RecipeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,11 +29,9 @@ public class RecipeController {
   // 3. циклично филтрита по дадени правила: цена, енергийна стойност (Algorithm)
   // 4. връща отговарящите резултати
 
-  @PostMapping(path = "/findRecipesByProducts")
-  public ResponseEntity findRecipesByProducts(@RequestBody Product products) {
-    List<Product> products1 = new ArrayList<>();
-    products1.add(products);
-    return ResponseEntity.ok(recipeService.findRecipesByProducts(products1));
+  @PostMapping(path = "/findRecipesByProducts", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity findRecipesByProducts(@RequestBody List<Product> products) {
+    return ResponseEntity.ok(recipeService.findRecipesByProducts(products));
   }
 
 

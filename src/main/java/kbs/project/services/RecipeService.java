@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import kbs.project.apidtos.IngredientApiDto;
+import kbs.project.apidtos.IngredientByIdApiDto;
 import kbs.project.apidtos.IngredientNutritionApiDto;
 import kbs.project.apidtos.RecipeByIdApiDto;
 import kbs.project.apidtos.RecipeByIngredientsApiDto;
 import kbs.project.entities.Product;
 import kbs.project.entities.Recipe;
-import kbs.project.services.ApiClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +56,15 @@ public class RecipeService {
 
     System.out.println("Left " + recipes.size() + " after removing the ones with bigger calories than specified.");
 
-    //todo check the price of the products -> next call to api
+    //product - calories
+    Map<String, BigDecimal> productsWithPrices = new HashMap<>();
+    products.stream()
+        .map(product -> productsWithPrices.put(product.getName(), product.getPrice()));
+
+    recipes = removeRecipesWithNotEqualPricesOfIngredients(recipes, productsWithPrices);
+
+    System.out.println("Left " + recipes.size() + " after removing the ones with bigger price than specified.");
+    System.out.println("Final number of recipes: " + recipes.size());
 
     return recipes.stream()
         .map(this::convertRecipeApiDtoToRecipe)
@@ -66,6 +74,9 @@ public class RecipeService {
   //циклично намира най-подходяшите рецепти спрямо дадените от потребителя правила:
   //цена и енергийна стойност
 
+  // ВСИЧКИ СЛЕДВАЩИ ФУНКЦИИ ИГРАЯТ РОЛЯ НА "ИНТЕРПРЕТАТОР НА ПРАВИЛАТА":
+
+  //TODO да се запазват в моя база резултатите от филтрирането - ML чрез наизустяване:
 
   // Премахваме рецептите, които съдържат продукти освен зададените от нас:
   private List<RecipeByIngredientsApiDto> removeRecipesWithMissingIngredients(List<RecipeByIngredientsApiDto> allRecipes) {
@@ -135,6 +146,32 @@ public class RecipeService {
     return filteredRecipes;
   }
 
+  private List<RecipeByIngredientsApiDto> removeRecipesWithNotEqualPricesOfIngredients(List<RecipeByIngredientsApiDto> allRecipes,
+      Map<String, BigDecimal> productsWithPrices) {
+    List<RecipeByIngredientsApiDto> filteredRecipes = new ArrayList<>();
+    for (RecipeByIngredientsApiDto recipe : allRecipes) {
+      boolean checkAllIngredients = true;
+      for (IngredientApiDto ingredient : recipe.getUsedIngredients()) {
+        IngredientByIdApiDto ingredientById = apiClientService.getIngredientById(ingredient.getId());
+        for (String productName : productsWithPrices.keySet()) {
+          if (productName.equals(ingredient.getName())) {
+            if (!ingredientById.getEstimatedCost().getValue().equals(productsWithPrices.get(productName))) {
+              checkAllIngredients = false;
+              break;
+            }
+          }
+        }
+        if (!checkAllIngredients) {
+          break;
+        }
+      }
+      if (checkAllIngredients) {
+        filteredRecipes.add(recipe);
+      }
+    }
+    return filteredRecipes;
+  }
+
   private Recipe convertRecipeApiDtoToRecipe(RecipeByIngredientsApiDto recipeByIngredientsApiDto) {
     RecipeByIdApiDto recipeByIdApiDto = apiClientService.findRecipeById(recipeByIngredientsApiDto.getId());
     return new Recipe(recipeByIngredientsApiDto.getTitle(), recipeByIdApiDto.getServings(),
@@ -143,10 +180,7 @@ public class RecipeService {
             .filter(nutrientApiDto -> nutrientApiDto.getTitle().equals("Calories"))
             .findFirst()
             .get()
-            .getAmount(), recipeByIdApiDto.getPricePerServing(), new ArrayList<>());
+            .getAmount(), recipeByIdApiDto.getPricePerServing());
   }
 
-  private Product convertIngredientApiDtoToProduct(IngredientApiDto ingredient) {
-    return new Product(ingredient.getName(), null, null, null);
-  }
 }

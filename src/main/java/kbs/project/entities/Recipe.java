@@ -1,8 +1,6 @@
 package kbs.project.entities;
 
 import java.math.BigDecimal;
-import java.util.List;
-import kbs.project.entities.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,8 +18,5 @@ public class Recipe {
   private BigDecimal kiloCalories;
   //цена на една порция
   private BigDecimal pricePerPortion;
-
-  //продукти:
-  private List<Product> products;
 
 }

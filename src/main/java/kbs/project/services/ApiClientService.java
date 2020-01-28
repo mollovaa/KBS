@@ -21,8 +21,6 @@ import org.springframework.web.client.RestTemplate;
 @PropertySource(value = "application.properties")
 public class ApiClientService {
 
-  // тук ще се прави call към Аpi i резултатът ще се мапва в Recipe;
-
   @Value("${food.api.key}")
   private String apiKey;
 

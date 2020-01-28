@@ -1,6 +1,5 @@
 package kbs.project.controllers;
 
-import java.util.ArrayList;
 import java.util.List;
 import kbs.project.entities.Product;
 import kbs.project.services.RecipeService;
@@ -23,18 +22,9 @@ public class RecipeController {
     this.recipeService = recipeService;
   }
 
-  // endpoint, който
-  // 1. приема дадени продукти от потребителя
-  // 2. хитва АПИ, за да вземе всички рецепти (ApiClient)
-  // 3. циклично филтрита по дадени правила: цена, енергийна стойност (Algorithm)
-  // 4. връща отговарящите резултати
-
   @PostMapping(path = "/findRecipesByProducts", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity findRecipesByProducts(@RequestBody List<Product> products) {
     return ResponseEntity.ok(recipeService.findRecipesByProducts(products));
   }
-
-
-  //todo add swagger
 
 }

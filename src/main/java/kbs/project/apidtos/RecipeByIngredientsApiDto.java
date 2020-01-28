@@ -15,12 +15,10 @@ public class RecipeByIngredientsApiDto {
   @JsonProperty(value = "title")
   private String title;
 
-  @JsonProperty(value = "missedIngredientCount")  // da nqma lipsvasti
+  @JsonProperty(value = "missedIngredientCount")
   private Integer missedIngredientCount;
 
   @JsonProperty(value = "usedIngredients")
   private List<IngredientApiDto> usedIngredients;
-
-//  private Integer usedIngredientCount;
 
 }

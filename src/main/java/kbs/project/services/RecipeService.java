@@ -1,14 +1,10 @@
 package kbs.project.services;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import kbs.project.apidtos.IngredientApiDto;
-import kbs.project.apidtos.IngredientByIdApiDto;
-import kbs.project.apidtos.IngredientNutritionApiDto;
 import kbs.project.apidtos.RecipeByIdApiDto;
 import kbs.project.apidtos.RecipeByIngredientsApiDto;
 import kbs.project.entities.Product;
@@ -20,10 +16,12 @@ import org.springframework.stereotype.Service;
 public class RecipeService {
 
   private ApiClientService apiClientService;
+  private RulesInterpreter rulesInterpreter;
 
   @Autowired
-  public RecipeService(ApiClientService apiClientService) {
+  public RecipeService(ApiClientService apiClientService, RulesInterpreter rulesInterpreter) {
     this.apiClientService = apiClientService;
+    this.rulesInterpreter = rulesInterpreter;
   }
 
   public List<Recipe> findRecipesByProducts(List<Product> products) {
@@ -34,7 +32,7 @@ public class RecipeService {
 
     System.out.println("Got " + recipes.size() + " recipes with these products!");
 
-    recipes = removeRecipesWithMissingIngredients(recipes);
+    recipes = rulesInterpreter.removeRecipesWithMissingIngredients(recipes);
 
     System.out.println("Left " + recipes.size() + " recipes after removing the ones with missing ingredients.");
 
@@ -43,7 +41,7 @@ public class RecipeService {
     products.stream()
         .map(product -> productsWithAmounts.put(product.getName(), product.getAvailableAmount()));
 
-    recipes = removeRecipesWithProductsQuantityBiggerThanExpected(recipes, productsWithAmounts);
+    recipes = rulesInterpreter.removeRecipesWithProductsQuantityBiggerThanExpected(recipes, productsWithAmounts);
 
     System.out.println("Left " + recipes.size() + " after removing the ones with bigger product quantity then specified.");
 
@@ -52,7 +50,7 @@ public class RecipeService {
     products.stream()
         .map(product -> productsWithCalories.put(product.getName(), product.getKiloCalories()));
 
-    recipes = removeRecipesWithNotEqualCaloriesOfIngredients(recipes, productsWithCalories);
+    recipes = rulesInterpreter.removeRecipesWithMoreCaloriesOfIngredients(recipes, productsWithCalories);
 
     System.out.println("Left " + recipes.size() + " after removing the ones with bigger calories than specified.");
 
@@ -61,7 +59,7 @@ public class RecipeService {
     products.stream()
         .map(product -> productsWithPrices.put(product.getName(), product.getPrice()));
 
-    recipes = removeRecipesWithNotEqualPricesOfIngredients(recipes, productsWithPrices);
+    recipes = rulesInterpreter.removeRecipesWithBiggerPricesOfIngredients(recipes, productsWithPrices);
 
     System.out.println("Left " + recipes.size() + " after removing the ones with bigger price than specified.");
     System.out.println("Final number of recipes: " + recipes.size());
@@ -69,107 +67,6 @@ public class RecipeService {
     return recipes.stream()
         .map(this::convertRecipeApiDtoToRecipe)
         .collect(Collectors.toList());
-  }
-
-  //циклично намира най-подходяшите рецепти спрямо дадените от потребителя правила:
-  //цена и енергийна стойност
-
-  // ВСИЧКИ СЛЕДВАЩИ ФУНКЦИИ ИГРАЯТ РОЛЯ НА "ИНТЕРПРЕТАТОР НА ПРАВИЛАТА":
-
-  //TODO да се запазват в моя база резултатите от филтрирането - ML чрез наизустяване:
-
-  // Премахваме рецептите, които съдържат продукти освен зададените от нас:
-  private List<RecipeByIngredientsApiDto> removeRecipesWithMissingIngredients(List<RecipeByIngredientsApiDto> allRecipes) {
-    return allRecipes.stream()
-        .filter(recipeByIngredientsApiDto -> recipeByIngredientsApiDto.getMissedIngredientCount() == 0)
-        .collect(Collectors.toList());
-  }
-
-  private List<RecipeByIngredientsApiDto> removeRecipesWithProductsQuantityBiggerThanExpected(List<RecipeByIngredientsApiDto> allRecipes,
-      Map<String, BigDecimal> productsWithAmounts) {
-
-    List<RecipeByIngredientsApiDto> filteredRecipes = new ArrayList<>();
-
-    for (RecipeByIngredientsApiDto recipe : allRecipes) {
-      boolean checkAllIngredients = true;
-      for (IngredientApiDto ingredient : recipe.getUsedIngredients()) {
-        for (String product : productsWithAmounts.keySet()) {
-          if (ingredient.getName().equals(product)) {
-            if (ingredient.getUnit().equals("g")) {
-              if (!ingredient.getAmount().equals(productsWithAmounts.get(product))) {
-                checkAllIngredients = false;
-                break;
-              }
-            } else {
-              //convert units and check again
-            }
-          }
-        }
-        if (!checkAllIngredients) {
-          break;
-        }
-      }
-      if (checkAllIngredients) {
-        filteredRecipes.add(recipe);
-      }
-    }
-    return filteredRecipes;
-  }
-
-  private List<RecipeByIngredientsApiDto> removeRecipesWithNotEqualCaloriesOfIngredients(List<RecipeByIngredientsApiDto> allRecipes,
-      Map<String, BigDecimal> productsWithCalories) {
-    List<RecipeByIngredientsApiDto> filteredRecipes = new ArrayList<>();
-    for (RecipeByIngredientsApiDto recipe : allRecipes) {
-      boolean checkAllIngredients = true;
-      RecipeByIdApiDto recipeById = apiClientService.findRecipeById(recipe.getId());
-      for (IngredientNutritionApiDto ingredient : recipeById.getNutrition().getIngredients()) {
-        for (String productName : productsWithCalories.keySet()) {
-          if (productName.equals(ingredient.getName())) {
-            if (ingredient.getUnit().equals("g")) {
-              if (!ingredient.getAmount().equals(productsWithCalories.get(productName))) {
-                checkAllIngredients = false;
-                break;
-              }
-            } else {
-              //convert units and check again
-            }
-          }
-        }
-        if (!checkAllIngredients) {
-          break;
-        }
-      }
-      if (checkAllIngredients) {
-        filteredRecipes.add(recipe);
-      }
-    }
-    return filteredRecipes;
-  }
-
-  private List<RecipeByIngredientsApiDto> removeRecipesWithNotEqualPricesOfIngredients(List<RecipeByIngredientsApiDto> allRecipes,
-      Map<String, BigDecimal> productsWithPrices) {
-    List<RecipeByIngredientsApiDto> filteredRecipes = new ArrayList<>();
-    for (RecipeByIngredientsApiDto recipe : allRecipes) {
-      boolean checkAllIngredients = true;
-      for (IngredientApiDto ingredient : recipe.getUsedIngredients()) {
-        IngredientByIdApiDto ingredientById = apiClientService.getIngredientById(ingredient.getId());
-        for (String productName : productsWithPrices.keySet()) {
-          if (productName.equals(ingredient.getName())) {
-            if (!ingredientById.getEstimatedCost().getValue().equals(productsWithPrices.get(productName))) {
-              checkAllIngredients = false;
-              break;
-            }
-          }
-        }
-        if (!checkAllIngredients) {
-          break;
-        }
-      }
-      if (checkAllIngredients) {
-        filteredRecipes.add(recipe);
-      }
-    }
-    return filteredRecipes;
   }
 
   private Recipe convertRecipeApiDtoToRecipe(RecipeByIngredientsApiDto recipeByIngredientsApiDto) {

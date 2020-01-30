@@ -44,14 +44,14 @@ public class RulesInterpreter {
       for (IngredientApiDto ingredient : recipe.getUsedIngredients()) {
         for (String product : productsWithAmounts.keySet()) {
           if (ingredient.getName().equals(product)) {
-            if (ingredient.getUnit().equals("g")) {
+//            if (ingredient.getUnit().equals("g")) {
               if (ingredient.getAmount().compareTo(productsWithAmounts.get(product)) > 0) {
                 checkAllIngredients = false;
                 break;
               }
-            } else {
+//            } else {
               //convert units and check again
-            }
+//            }
           }
         }
         if (!checkAllIngredients) {
@@ -76,14 +76,14 @@ public class RulesInterpreter {
       for (IngredientNutritionApiDto ingredient : recipeById.getNutrition().getIngredients()) {
         for (String productName : productsWithCalories.keySet()) {
           if (productName.equals(ingredient.getName())) {
-            if (ingredient.getUnit().equals("g")) {
+//            if (ingredient.getUnit().equals("g")) {
               if (ingredient.getAmount().compareTo(productsWithCalories.get(productName)) > 0) {
                 checkAllIngredients = false;
                 break;
               }
-            } else {
+//            } else {
               //convert units and check again
-            }
+//            }
           }
         }
         if (!checkAllIngredients) {

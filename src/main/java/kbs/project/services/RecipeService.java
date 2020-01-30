@@ -38,8 +38,9 @@ public class RecipeService {
 
     //product - available amount
     Map<String, BigDecimal> productsWithAmounts = new HashMap<>();
-    products.stream()
-        .map(product -> productsWithAmounts.put(product.getName(), product.getAvailableAmount()));
+    for (Product product : products) {
+      productsWithAmounts.put(product.getName(), product.getAvailableAmount());
+    }
 
     recipes = rulesInterpreter.removeRecipesWithProductsQuantityBiggerThanExpected(recipes, productsWithAmounts);
 
@@ -47,8 +48,9 @@ public class RecipeService {
 
     //product - calories
     Map<String, BigDecimal> productsWithCalories = new HashMap<>();
-    products.stream()
-        .map(product -> productsWithCalories.put(product.getName(), product.getKiloCalories()));
+    for (Product product : products) {
+      productsWithCalories.put(product.getName(), product.getKiloCalories());
+    }
 
     recipes = rulesInterpreter.removeRecipesWithMoreCaloriesOfIngredients(recipes, productsWithCalories);
 
@@ -56,9 +58,9 @@ public class RecipeService {
 
     //product - calories
     Map<String, BigDecimal> productsWithPrices = new HashMap<>();
-    products.stream()
-        .map(product -> productsWithPrices.put(product.getName(), product.getPrice()));
-
+    for (Product product : products) {
+      productsWithPrices.put(product.getName(), product.getPrice());
+    }
     recipes = rulesInterpreter.removeRecipesWithBiggerPricesOfIngredients(recipes, productsWithPrices);
 
     System.out.println("Left " + recipes.size() + " after removing the ones with bigger price than specified.");
